@@ -1,0 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply bg-bg text-white font-sans antialiased;
+    min-height: 100dvh;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-card;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-surface-alt rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary hover:bg-primary-light text-white font-semibold px-4 py-2 rounded-lg transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-ghost {
+    @apply text-primary-light hover:bg-primary-ghost px-4 py-2 rounded-lg transition-colors duration-150;
+  }
+  .card {
+    @apply bg-card border border-border rounded-xl p-4;
+  }
+  .input {
+    @apply bg-input border border-border-input text-white placeholder:text-muted rounded-lg px-3 py-2 w-full focus:outline-none focus:border-primary transition-colors;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full;
+  }
+}
