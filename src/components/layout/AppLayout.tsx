@@ -29,7 +29,8 @@ export function AppLayout() {
           >
             <Menu size={22} />
           </button>
-          <span className="font-semibold text-primary-light">OneVoice</span>
+          <img src="/onevoice-icon.png" alt="OneVoice" className="w-6 h-6 rounded object-cover" />
+          <span className="font-semibold text-white">OneVoice</span>
         </header>
 
         {/* Page content */}

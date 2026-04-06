@@ -42,9 +42,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     >
       {/* Logo */}
       <div className="flex items-center gap-2 px-5 h-16 border-b border-border shrink-0">
-        <div className="w-8 h-8 rounded-lg bg-gradient-brand flex items-center justify-center">
-          <Music size={16} className="text-white" />
-        </div>
+        <img src="/onevoice-icon.png" alt="OneVoice" className="w-8 h-8 rounded-lg object-cover" />
         <span className="font-bold text-lg text-white">OneVoice</span>
       </div>
 
