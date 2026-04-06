@@ -9,6 +9,10 @@ import { CalendarPage } from '@/pages/CalendarPage'
 import { EscalaPage } from '@/pages/EscalaPage'
 import { MembersPage } from '@/pages/MembersPage'
 import { SettingsPage } from '@/pages/SettingsPage'
+import { MusicianModePage } from '@/pages/MusicianModePage'
+import { MusicProfilePage } from '@/pages/MusicProfilePage'
+import { LeaderDashboardPage } from '@/pages/LeaderDashboardPage'
+import { AutoScalePage } from '@/pages/AutoScalePage'
 import { SubscriptionRequiredPage } from '@/pages/SubscriptionRequiredPage'
 
 const OWNER_EMAIL = import.meta.env.VITE_OWNER_EMAIL as string | undefined
@@ -31,7 +35,6 @@ function SubscriptionGuard({ children }: { children: React.ReactNode }) {
   if (loading) return <Spinner />
   if (!session) return <Navigate to="/auth" replace />
 
-  // Owner bypass e beta mode liberam acesso irrestrito
   const isOwner = OWNER_EMAIL && user?.email === OWNER_EMAIL
   const hasAccess = BETA_MODE || isOwner || subscription.isActive
 
@@ -64,6 +67,10 @@ function AppRoutes() {
         <Route path="escala" element={<EscalaPage />} />
         <Route path="members" element={<MembersPage />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="musician-mode" element={<MusicianModePage />} />
+        <Route path="music-profile" element={<MusicProfilePage />} />
+        <Route path="leader-dashboard" element={<LeaderDashboardPage />} />
+        <Route path="auto-scale" element={<AutoScalePage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

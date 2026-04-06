@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { useApp } from '@/context/AppContext'
-import { User, Shield, LogOut, ChevronRight, Crown, Check } from 'lucide-react'
+import {
+  User, Shield, LogOut, ChevronRight, Crown, Check,
+  Edit2, Save, X, DoorOpen,
+} from 'lucide-react'
 import { clsx } from 'clsx'
 
 const PLAN_INFO: Record<string, { label: string; color: string; limit: string }> = {
@@ -11,18 +14,58 @@ const PLAN_INFO: Record<string, { label: string; color: string; limit: string }>
 }
 
 export function SettingsPage() {
-  const { user, currentMinistry, subscription, signOut, ministries, setCurrentMinistry } = useApp()
+  const {
+    user, currentMinistry, subscription, signOut,
+    ministries, setCurrentMinistry,
+    isOwner, updateMinistry, leaveMinistry,
+  } = useApp()
   const [signingOut, setSigningOut] = useState(false)
   const [showMinistries, setShowMinistries] = useState(false)
 
+  // Edição do ministério
+  const [editingMinistry, setEditingMinistry] = useState(false)
+  const [editName, setEditName] = useState('')
+  const [editChurch, setEditChurch] = useState('')
+  const [savingMinistry, setSavingMinistry] = useState(false)
+  const [ministryError, setMinistryError] = useState('')
+
   const plan = PLAN_INFO[subscription.planKey ?? 'free']
+  const userName = (user?.user_metadata?.name as string | undefined) ?? user?.email?.split('@')[0] ?? '—'
 
   async function handleSignOut() {
     setSigningOut(true)
     await signOut()
   }
 
-  const userName = (user?.user_metadata?.name as string | undefined) ?? user?.email?.split('@')[0] ?? '—'
+  function openEditMinistry() {
+    setEditName(currentMinistry?.name ?? '')
+    setEditChurch(currentMinistry?.churchName ?? '')
+    setMinistryError('')
+    setEditingMinistry(true)
+  }
+
+  async function handleSaveMinistry() {
+    if (!editName.trim()) { setMinistryError('Nome obrigatório'); return }
+    setSavingMinistry(true)
+    setMinistryError('')
+    try {
+      await updateMinistry({ name: editName.trim(), churchName: editChurch.trim() })
+      setEditingMinistry(false)
+    } catch (err) {
+      setMinistryError(err instanceof Error ? err.message : 'Erro ao salvar')
+    } finally {
+      setSavingMinistry(false)
+    }
+  }
+
+  async function handleLeaveMinistry() {
+    if (!confirm('Tem certeza que deseja sair deste ministério?')) return
+    try {
+      await leaveMinistry()
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erro ao sair do ministério')
+    }
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -39,7 +82,6 @@ export function SettingsPage() {
             <p className="text-muted text-sm">{user?.email}</p>
           </div>
         </div>
-
         <Row label="E-mail" value={user?.email ?? '—'} />
         <Row label="ID do usuário" value={user?.id ? user.id.slice(0, 8) + '...' : '—'} mono />
         <Row
@@ -50,45 +92,91 @@ export function SettingsPage() {
 
       {/* Ministério */}
       <section className="card space-y-0">
-        <div className="flex items-center gap-2 mb-3">
-          <User size={15} className="text-primary-light" />
-          <h2 className="font-semibold text-white">Ministério</h2>
-        </div>
-        <div className="space-y-0 divide-y divide-border">
-          <Row label="Nome" value={currentMinistry?.name ?? '—'} />
-          {currentMinistry?.churchName && <Row label="Igreja" value={currentMinistry.churchName} />}
-
-          {ministries.length > 1 && (
-            <div className="py-3">
-              <button
-                onClick={() => setShowMinistries((v) => !v)}
-                className="flex items-center justify-between w-full text-left"
-              >
-                <span className="text-sm text-muted">Trocar ministério</span>
-                <ChevronRight size={14} className={clsx('text-muted transition-transform', showMinistries && 'rotate-90')} />
-              </button>
-              {showMinistries && (
-                <div className="mt-2 space-y-1">
-                  {ministries.map((m) => (
-                    <button
-                      key={m.id}
-                      onClick={() => { setCurrentMinistry(m); setShowMinistries(false) }}
-                      className={clsx(
-                        'w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors',
-                        m.id === currentMinistry?.id
-                          ? 'bg-primary-ghost text-primary-light'
-                          : 'bg-surface text-muted hover:text-white hover:bg-surface-alt',
-                      )}
-                    >
-                      {m.name}
-                      {m.id === currentMinistry?.id && <Check size={14} />}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <User size={15} className="text-primary-light" />
+            <h2 className="font-semibold text-white">Ministério</h2>
+          </div>
+          {isOwner && !editingMinistry && (
+            <button
+              onClick={openEditMinistry}
+              className="flex items-center gap-1 text-xs text-muted hover:text-primary-light transition-colors"
+            >
+              <Edit2 size={12} /> Editar
+            </button>
           )}
         </div>
+
+        {editingMinistry ? (
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm text-muted mb-1">Nome do ministério *</label>
+              <input
+                className="input w-full"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="Nome do ministério"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-muted mb-1">Igreja</label>
+              <input
+                className="input w-full"
+                value={editChurch}
+                onChange={(e) => setEditChurch(e.target.value)}
+                placeholder="Nome da igreja (opcional)"
+              />
+            </div>
+            {ministryError && <p className="text-error text-sm">{ministryError}</p>}
+            <div className="flex gap-2">
+              <button onClick={handleSaveMinistry} disabled={savingMinistry}
+                className="btn-primary flex items-center gap-2 text-sm flex-1 justify-center">
+                <Save size={14} /> {savingMinistry ? 'Salvando...' : 'Salvar'}
+              </button>
+              <button onClick={() => setEditingMinistry(false)}
+                className="btn-ghost flex items-center gap-2 text-sm">
+                <X size={14} /> Cancelar
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-0 divide-y divide-border">
+            <Row label="Nome" value={currentMinistry?.name ?? '—'} />
+            {currentMinistry?.churchName && <Row label="Igreja" value={currentMinistry.churchName} />}
+            {currentMinistry && <Row label="Ministério ID" value={currentMinistry.id.slice(0, 8) + '...'} mono />}
+
+            {ministries.length > 1 && (
+              <div className="py-3">
+                <button
+                  onClick={() => setShowMinistries((v) => !v)}
+                  className="flex items-center justify-between w-full text-left"
+                >
+                  <span className="text-sm text-muted">Trocar ministério</span>
+                  <ChevronRight size={14} className={clsx('text-muted transition-transform', showMinistries && 'rotate-90')} />
+                </button>
+                {showMinistries && (
+                  <div className="mt-2 space-y-1">
+                    {ministries.map((m) => (
+                      <button
+                        key={m.id}
+                        onClick={() => { setCurrentMinistry(m); setShowMinistries(false) }}
+                        className={clsx(
+                          'w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors',
+                          m.id === currentMinistry?.id
+                            ? 'bg-primary-ghost text-primary-light'
+                            : 'bg-surface text-muted hover:text-white hover:bg-surface-alt',
+                        )}
+                      >
+                        {m.name}
+                        {m.id === currentMinistry?.id && <Check size={14} />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </section>
 
       {/* Assinatura */}
@@ -132,7 +220,18 @@ export function SettingsPage() {
         </p>
       </section>
 
-      {/* Sair */}
+      {/* Sair do ministério */}
+      {!isOwner && currentMinistry && (
+        <button
+          onClick={handleLeaveMinistry}
+          className="w-full card flex items-center gap-3 text-warning hover:border-warning/40 transition-colors"
+        >
+          <DoorOpen size={16} />
+          <span className="font-medium">Sair do ministério</span>
+        </button>
+      )}
+
+      {/* Sair da conta */}
       <button
         onClick={handleSignOut}
         disabled={signingOut}

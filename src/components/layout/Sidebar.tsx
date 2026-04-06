@@ -9,20 +9,15 @@ import {
   Settings,
   LogOut,
   ChevronDown,
+  Mic2,
+  BarChart2,
+  Sparkles,
+  Guitar,
+  LayoutDashboard,
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
 import { clsx } from 'clsx'
 import { useState } from 'react'
-
-const navItems = [
-  { to: '/', label: 'Início', icon: Home, end: true },
-  { to: '/songs', label: 'Músicas', icon: Music },
-  { to: '/setlists', label: 'Setlists', icon: List },
-  { to: '/calendar', label: 'Calendário', icon: Calendar },
-  { to: '/escala', label: 'Escala', icon: ClipboardList },
-  { to: '/members', label: 'Membros', icon: Users },
-  { to: '/settings', label: 'Configurações', icon: Settings },
-]
 
 interface SidebarProps {
   open: boolean
@@ -30,8 +25,10 @@ interface SidebarProps {
 }
 
 export function Sidebar({ open, onClose }: SidebarProps) {
-  const { user, currentMinistry, ministries, setCurrentMinistry, signOut } = useApp()
+  const { user, currentMinistry, ministries, setCurrentMinistry, signOut, isAdmin } = useApp()
   const [ministryMenuOpen, setMinistryMenuOpen] = useState(false)
+
+  const userName = (user?.user_metadata?.name as string | undefined) ?? user?.email?.split('@')[0] ?? '?'
 
   return (
     <aside
@@ -97,34 +94,51 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {navItems.map(({ to, label, icon: Icon, end }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={end}
-            onClick={onClose}
-            className={({ isActive }) =>
-              clsx(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                isActive
-                  ? 'bg-primary-ghost text-primary-light'
-                  : 'text-muted hover:text-white hover:bg-surface',
-              )
-            }
-          >
-            <Icon size={18} />
-            {label}
-          </NavLink>
-        ))}
+        {/* Seção principal */}
+        <NavItem to="/" label="Início" icon={Home} end onClick={onClose} />
+        <NavItem to="/songs" label="Músicas" icon={Music} onClick={onClose} />
+        <NavItem to="/setlists" label="Setlists" icon={List} onClick={onClose} />
+        <NavItem to="/calendar" label="Calendário" icon={Calendar} onClick={onClose} />
+        <NavItem to="/escala" label="Escala" icon={ClipboardList} onClick={onClose} />
+        <NavItem to="/members" label="Membros" icon={Users} onClick={onClose} />
+
+        {/* Seção músico */}
+        <div className="pt-3 pb-1">
+          <p className="px-3 text-xs font-semibold text-muted/60 uppercase tracking-wider">Músico</p>
+        </div>
+        <NavItem to="/musician-mode" label="Modo Músico" icon={Mic2} onClick={onClose} />
+        <NavItem to="/music-profile" label="Perfil Musical" icon={Guitar} onClick={onClose} />
+
+        {/* Seção admin */}
+        {isAdmin && (
+          <>
+            <div className="pt-3 pb-1">
+              <p className="px-3 text-xs font-semibold text-muted/60 uppercase tracking-wider">Admin</p>
+            </div>
+            <NavItem to="/leader-dashboard" label="Painel do Líder" icon={LayoutDashboard} onClick={onClose} />
+            <NavItem to="/auto-scale" label="Auto Escala" icon={Sparkles} onClick={onClose} />
+          </>
+        )}
+
+        {/* Estatísticas (futuro) — apenas admin vê, mas pode expandir */}
+        {isAdmin && (
+          <NavItem to="/stats" label="Estatísticas" icon={BarChart2} onClick={onClose} hidden />
+        )}
+
+        {/* Configurações */}
+        <div className="pt-3 pb-1">
+          <p className="px-3 text-xs font-semibold text-muted/60 uppercase tracking-wider">Conta</p>
+        </div>
+        <NavItem to="/settings" label="Configurações" icon={Settings} onClick={onClose} />
       </nav>
 
       {/* User footer */}
       <div className="px-3 py-3 border-t border-border shrink-0">
         <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg">
           <div className="w-7 h-7 rounded-full bg-surface flex items-center justify-center text-xs font-bold text-primary-light shrink-0">
-            {user?.email?.[0].toUpperCase() ?? '?'}
+            {userName[0].toUpperCase()}
           </div>
-          <p className="flex-1 text-xs text-muted truncate">{user?.email}</p>
+          <p className="flex-1 text-xs text-muted truncate">{userName}</p>
           <button
             onClick={signOut}
             className="text-muted hover:text-error transition-colors"
@@ -135,5 +149,36 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         </div>
       </div>
     </aside>
+  )
+}
+
+function NavItem({
+  to, label, icon: Icon, end, onClick, hidden,
+}: {
+  to: string
+  label: string
+  icon: typeof Home
+  end?: boolean
+  onClick: () => void
+  hidden?: boolean
+}) {
+  if (hidden) return null
+  return (
+    <NavLink
+      to={to}
+      end={end}
+      onClick={onClick}
+      className={({ isActive }) =>
+        clsx(
+          'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+          isActive
+            ? 'bg-primary-ghost text-primary-light'
+            : 'text-muted hover:text-white hover:bg-surface',
+        )
+      }
+    >
+      <Icon size={18} />
+      {label}
+    </NavLink>
   )
 }
